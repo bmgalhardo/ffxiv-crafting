@@ -26,6 +26,8 @@ def action(cost: int = 0, durability_loss: int = 0):
             self.player.cp -= cost
             self.update_durability(durability_loss)
             self.buffs.update()
+            if self.randomize:
+                self.randomize_condition()
             print(self.step, self.durability, self.progress, self.quality, self.player.cp)
             return self
         return wrapper
@@ -35,7 +37,7 @@ def action(cost: int = 0, durability_loss: int = 0):
 
 class Maker:
 
-    def __init__(self, player: Player, recipe: Recipe):
+    def __init__(self, player: Player, recipe: Recipe, randomize=False):
         self.player = player
         self.recipe = recipe
         self.diff = T.get_crafter_level(player.level) - recipe.rlevel
@@ -45,6 +47,8 @@ class Maker:
         self.durability = recipe.durability
 
         self.buffs = MakerBuffs()
+
+        self.randomize = randomize
         self.condition = ConditionModifier.Normal
 
         self.step = 0
@@ -126,6 +130,18 @@ class Maker:
             return True
         else:
             return False
+
+    def randomize_condition(self):
+        if self.condition == ConditionModifier.Excellent:
+            self.condition = ConditionModifier.Poor
+        elif self.condition == ConditionModifier.Poor or self.condition == ConditionModifier.Good:
+            self.condition = ConditionModifier.Normal
+        else:
+            r = random()
+            if r < 0.04:
+                self.condition = ConditionModifier.Excellent
+            elif r < 0.2:
+                self.condition = ConditionModifier.Good
 
     # list of abilities - Progression
 
