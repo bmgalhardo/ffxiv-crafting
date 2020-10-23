@@ -29,6 +29,7 @@ class Recipe:
     def __init__(self, name):
         self.name = name
 
+        self.level = None
         self.rlevel = None
 
         self.progress = None
@@ -45,6 +46,7 @@ class Recipe:
         client = FFXIVDB()
         recipe_data = client.get_recipe_by_name(self.name)
 
+        self.level = recipe_data['RecipeLevelTable']['ClassJobLevel']
         self.rlevel = recipe_data['RecipeLevelTableTargetID']
 
         durability_base = recipe_data['RecipeLevelTable']['Durability']
@@ -65,48 +67,3 @@ class Recipe:
         self.star = recipe_data['RecipeLevelTable']['Stars']
         self.expert = recipe_data['IsExpert']
 
-
-class Buffs:
-
-    def __init__(self):
-        self.inner_quiet = 1
-        self.inner_quiet_active = False
-        self.waste_not = 0
-        self.great_strides = 0
-        self.innovation = 0
-        self.veneration = 0
-        self.name_of_the_elements = 0
-        self.name_of_the_elements_available = True
-        self.final_appraisal = 0
-        self.manipulation = 0
-
-    @property
-    def progress_buff_list(self):
-        return [50 if self.veneration != 0 else 0]
-
-    @property
-    def quality_buff_list(self):
-        return [
-            100 if self.great_strides != 0 else 0,
-            50 if self.innovation != 0 else 0
-        ]
-
-    def update(self):
-
-        if self.waste_not:
-            self.waste_not -= 1
-
-        if self.great_strides:
-            self.great_strides -= 1
-
-        if self.innovation:
-            self.innovation -= 1
-
-        if self.final_appraisal:
-            self.final_appraisal -= 1
-
-        if self.name_of_the_elements:
-            self.name_of_the_elements -= 1
-
-        if self.manipulation:
-            self.manipulation -= 1

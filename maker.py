@@ -3,10 +3,17 @@ from math import floor, ceil
 from random import random
 from functools import wraps
 
-from objects import Player, Recipe, Buffs
+from objects import Player, Recipe
+from buffs import MakerBuffs
 from tables import Tables, ConditionModifier
 
 T = Tables()
+
+# documentation
+# copy
+# https://docs.google.com/document/d/1cJ9ikSiENWbFFolwpDwK6i7ltKkIZ3jCpZFePbayT2A/edit?usp=sharing
+# original
+# https://docs.google.com/document/d/1Da48dDVPB7N4ignxGeo0UeJ_6R0kQRqzLUH-TkpSQRc/edit
 
 
 def action(cost: int = 0, durability_loss: int = 0):
@@ -14,11 +21,12 @@ def action(cost: int = 0, durability_loss: int = 0):
     def callable(func):
         @wraps(func)
         def wrapper(self):
+            self.step += 1
             func(self)
             self.player.cp -= cost
             self.update_durability(durability_loss)
             self.buffs.update()
-            print(self.durability, self.progress, self.quality, self.player.cp)
+            print(self.step, self.durability, self.progress, self.quality, self.player.cp)
             return self
         return wrapper
 
@@ -36,8 +44,10 @@ class Maker:
         self.quality = 0
         self.durability = recipe.durability
 
-        self.buffs = Buffs()
+        self.buffs = MakerBuffs()
         self.condition = ConditionModifier.Normal
+
+        self.step = 0
 
     def increase_progress(self, efficiency, brand=False):
         p1 = self.player.craftsmanship * 21 / 100 + 2
@@ -47,8 +57,8 @@ class Maker:
 
         self.progress += floor(progress / 100)
 
-        if self.buffs.final_appraisal and self.progress > self.recipe.progress:
-            self.buffs.final_appraisal = 0
+        if self.buffs.final_appraisal.active and self.progress > self.recipe.progress:
+            self.buffs.final_appraisal.lose()
             self.progress = self.recipe.progress - 1
 
         return self
@@ -64,14 +74,17 @@ class Maker:
 
         self.quality += floor(quality / 100)
 
-        if self.buffs.inner_quiet_active:
-            self.buffs.inner_quiet += 1
+        if self.buffs.inner_quiet.active:
+            self.buffs.inner_quiet.increase()
+
+        if self.buffs.great_strides.active:
+            self.buffs.great_strides.lose()
 
         return self
 
     def calc_progress_efficiency(self, efficiency, brand=False):
         eff = efficiency * (100 + sum(self.buffs.progress_buff_list)) / 100
-        if brand and self.buffs.name_of_the_elements:
+        if brand and self.buffs.name_of_the_elements.active:
             eff += self.name_of_the_elements_bonus
         return eff
 
@@ -80,7 +93,7 @@ class Maker:
 
     @property
     def inner_quiet_bonus(self):
-        bonus = self.player.control + self.player.control * ((self.buffs.inner_quiet - 1) * 20 / 100)
+        bonus = self.player.control + self.player.control * ((self.buffs.inner_quiet.value - 1) * 20 / 100)
         return bonus
 
     @property
@@ -89,23 +102,30 @@ class Maker:
 
     @property
     def byregot_blessing_bonus(self) -> int:
-        return 100 + (self.buffs.inner_quiet - 1) * 20
+        return 100 + (self.buffs.inner_quiet.value - 1) * 20
 
     @property
     def name_of_the_elements_bonus(self) -> int:
         return 2 * ceil((1 - self.progress / self.recipe.progress) * 100)
 
     def durability_loss(self, durability_cost):
-        if self.buffs.waste_not == 0:
-            return durability_cost
-        else:
+        if self.buffs.waste_not.active or self.buffs.waste_not_ii.active:
             return durability_cost / 2
+        else:
+            return durability_cost
 
     def update_durability(self, durability_cost):
         if durability_cost:
             self.durability -= self.durability_loss(durability_cost)
-        if self.buffs.manipulation:
+        if self.buffs.manipulation.active:
             self.durability += 5
+
+    @property
+    def is_good_or_excellent(self):
+        if self.condition == ConditionModifier.Good or self.condition == ConditionModifier.Excellent:
+            return True
+        else:
+            return False
 
     # list of abilities - Progression
 
@@ -119,7 +139,6 @@ class Maker:
 
     @action(durability_loss=10)
     def rapid_synthesis(self):
-
         if random() < 0.5:
             self.increase_progress(500)
 
@@ -132,11 +151,20 @@ class Maker:
 
     @action(cost=5, durability_loss=10)
     def focused_synthesis(self):
-        raise NotImplemented
+        if self.buffs.observe.active:
+            r = 0
+        else:
+            r = random()
+        if r < 0.5:
+            self.increase_progress(200)
 
     @action(cost=6, durability_loss=10)
     def muscle_memory(self):
-        raise NotImplemented
+        if self.step == 1:
+            self.increase_quality(300)
+            self.buffs.muscle_memory.activate()
+        else:
+            raise Exception('only valid on first step')
 
     @action(cost=6, durability_loss=10)
     def brand_of_the_elements(self):
@@ -144,10 +172,10 @@ class Maker:
 
     @action(cost=6, durability_loss=10)
     def intensive_synthesis(self):
-        if self.condition != ConditionModifier.Good and self.condition != ConditionModifier.Excellent:
-            raise Exception('Cannot use when not Good or Excellent')
+        if self.is_good_or_excellent:
+            self.increase_progress(300)
         else:
-            raise NotImplemented
+            raise Exception('Cannot only use when Good or Excellent')
 
     # list of abilities - Quality
 
@@ -166,76 +194,106 @@ class Maker:
 
     @action(cost=24, durability_loss=10)
     def byregots_blessing(self):
-        raise NotImplemented
+        self.increase_quality(self.byregot_blessing_bonus)
+        self.buffs.inner_quiet.lose()
 
     @action(cost=18, durability_loss=10)
     def precise_touch(self):
-        raise NotImplemented
+        if self.is_good_or_excellent:
+            self.increase_quality(150)
+            if self.buffs.inner_quiet.active:
+                self.buffs.inner_quiet.increase()
+        else:
+            raise Exception('can only use when good or excellent')
 
     @action(cost=18, durability_loss=10)
     def focused_touch(self):
-        raise NotImplemented
+        if self.buffs.observe.active:
+            r = 0
+        else:
+            r = random()
+        if r < 0.5:
+            self.increase_quality(150)
 
     @action(cost=6, durability_loss=10)
     def patient_touch(self):
-        raise NotImplemented
+        r = random()
+        if r < 0.5:
+            self.increase_quality(100)
+
+        if self.buffs.inner_quiet.active:
+            if r < 0.5:
+                self.buffs.inner_quiet.double()
+            else:
+                self.buffs.inner_quiet.half()
 
     @action(cost=25, durability_loss=5)
     def prudent_touch(self):
-        if self.buffs.waste_not != 0:
+        if self.buffs.waste_not.active:
             raise Exception('cant use skill with waste not active')
         else:
             self.increase_quality(100)
 
     @action(cost=150, durability_loss=10)
     def trained_eye(self):
-        raise NotImplemented
+        if self.step == 1:
+            if self.recipe.level + 10 <= self.player.level:
+                self.progress = self.recipe.progress
+            else:
+                raise Exception('cant use recipe, only for recipes 10 lvl below')
+        else:
+            raise Exception('only valid on first step')
 
-    @action(cost=40, durability_loss=10)
+    @action(cost=40, durability_loss=20)
     def preparatory_touch(self):
-        raise NotImplemented
+        self.increase_quality(200)
+        self.buffs.inner_quiet.increase()
 
     @action(cost=24, durability_loss=10)
     def reflect(self):
-        raise NotImplemented
-
+        if self.step == 1:
+            self.increase_quality(100)
+            self.buffs.inner_quiet.activate()
+            self.buffs.inner_quiet.value = 3
+        else:
+            raise Exception('only valid on first step')
     # list of abilities - Buffs
 
     @action(cost=18)
     def inner_quiet(self):
-        self.buffs.inner_quiet_active = True
+        if self.buffs.inner_quiet.active:
+            raise Exception('cant use, already active')
+        self.buffs.inner_quiet.activate()
 
     @action(cost=56)
     def waste_not(self):
-        self.buffs.waste_not = 4 + 1
+        self.buffs.waste_not_ii.lose()
+        self.buffs.waste_not.activate()
 
     @action(cost=98)
     def waste_not_ii(self):
-        self.buffs.waste_not = 8 + 1
+        self.buffs.waste_not.lose()
+        self.buffs.waste_not_ii.activate()
 
     @action(cost=32)
     def great_strides(self):
-        raise NotImplemented
+        self.buffs.great_strides.activate()
 
     @action(cost=18)
     def innovation(self):
-        raise NotImplemented
+        self.buffs.innovation.activate()
 
     @action(cost=18)
     def veneration(self):
-        raise NotImplemented
+        self.buffs.veneration.activate()
 
     @action(cost=30)
     def name_of_the_elements(self):
-        if self.buffs.name_of_the_elements_available:
-            self.buffs.name_of_the_elements_available = False
-            self.buffs.name_of_the_elements = 3 + 1
-        else:
-            raise Exception('Already used this action in synthesis')
+        self.buffs.name_of_the_elements.activate()
 
     @action(cost=1)
     def final_appraisal(self):
-        self.buffs.final_appraisal = 5 + 1
+        self.buffs.final_appraisal.activate()
 
     # list of abilities - Repair
 
@@ -245,13 +303,13 @@ class Maker:
 
     @action(cost=96)
     def manipulation(self):
-        self.buffs.manipulation = 8 + 1
+        self.buffs.manipulation.activate()
 
     # list of abilities - Other
 
     @action(cost=7)
     def observe(self):
-        pass
+        self.buffs.observe.activate()
 
     @action()
     def careful_observation(self):
@@ -264,7 +322,7 @@ class Maker:
 
     @action()
     def tricks_of_the_trade(self):
-        if self.condition == ConditionModifier.Good or self.condition == ConditionModifier.Excellent:
+        if self.is_good_or_excellent:
             self.player.cp += 20
         else:
             raise Exception('Can only use when Good condition.')

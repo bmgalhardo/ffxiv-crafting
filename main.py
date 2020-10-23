@@ -7,17 +7,20 @@ if __name__ == '__main__':
     r.update_fromdb()
 
     m = Maker(recipe=r, player=Player(80, 1500, 1350, 300))
-    print(m.durability, m.progress, m.quality, m.player.cp)
+    print(m.step, m.durability, m.progress, m.quality, m.player.cp)
 
     action_rotation = [
-        Actions.NAME_OF_THE_ELEMENTS,
-        Actions.CAREFUL_SYNTHESIS,
-        Actions.BRAND_OF_THE_ELEMENTS,
+        Actions.REFLECT,
+        Actions.GREAT_STRIDES,
+        Actions.INNOVATION,
+        Actions.OBSERVE,
         Actions.BASIC_TOUCH,
-        Actions.BASIC_TOUCH,
-        Actions.BASIC_TOUCH,
-        Actions.BASIC_TOUCH,
-        Actions.GROUNDWORK
+        Actions.STANDARD_TOUCH,
+        Actions.PREPARATORY_TOUCH,
+        Actions.BYREGOTS_BLESSING,
+        # Actions.CAREFUL_SYNTHESIS,
+        # Actions.VENERATION,
+        # Actions.GROUNDWORK
     ]
 
     for action in action_rotation:
