@@ -344,46 +344,53 @@ class Maker:
             raise Exception('Can only use when Good condition.')
 
 
+class ActionStats:
+
+    def __init__(self, function, min_lvl):
+        self.function = function
+        self.min_level = min_lvl
+
+
 class Actions(Enum):
     # progression
-    BASIC_SYNTHESIS = Maker.basic_synthesis.__name__
-    CAREFUL_SYNTHESIS = Maker.careful_synthesis.__name__
-    RAPID_SYNTHESIS = Maker.rapid_synthesis.__name__
-    GROUNDWORK = Maker.groundwork.__name__
-    FOCUSED_SYNTHESIS = Maker.focused_synthesis.__name__
-    MUSCLE_MEMORY = Maker.muscle_memory.__name__
-    BRAND_OF_THE_ELEMENTS = Maker.brand_of_the_elements.__name__
-    INTENSIVE_SYNTHESIS = Maker.intensive_synthesis.__name__
+    BASIC_SYNTHESIS = ActionStats(Maker.basic_synthesis.__name__, 1)
+    CAREFUL_SYNTHESIS = ActionStats(Maker.careful_synthesis.__name__, 62)
+    RAPID_SYNTHESIS = ActionStats(Maker.rapid_synthesis.__name__, 9)
+    GROUNDWORK = ActionStats(Maker.groundwork.__name__, 72)
+    FOCUSED_SYNTHESIS = ActionStats(Maker.focused_synthesis.__name__, 67)
+    MUSCLE_MEMORY = ActionStats(Maker.muscle_memory.__name__, 54)
+    BRAND_OF_THE_ELEMENTS = ActionStats(Maker.brand_of_the_elements.__name__, 37)
+    INTENSIVE_SYNTHESIS = ActionStats(Maker.intensive_synthesis.__name__, 78)
 
     # quality
-    BASIC_TOUCH = Maker.basic_touch.__name__
-    STANDARD_TOUCH = Maker.standard_touch.__name__
-    HASTY_TOUCH = Maker.hasty_touch.__name__
-    BYREGOTS_BLESSING = Maker.byregots_blessing.__name__
-    PRECISE_TOUCH = Maker.prudent_touch.__name__
-    FOCUSED_TOUCH = Maker.focused_touch.__name__
-    PATIENT_TOUCH = Maker.patient_touch.__name__
-    PRUDENT_TOUCH = Maker.prudent_touch.__name__
-    TRAINED_EYE = Maker.trained_eye.__name__
-    PREPARATORY_TOUCH = Maker.preparatory_touch.__name__
-    REFLECT = Maker.reflect.__name__
+    BASIC_TOUCH = ActionStats(Maker.basic_touch.__name__, 5)
+    STANDARD_TOUCH = ActionStats(Maker.standard_touch.__name__, 18)
+    HASTY_TOUCH = ActionStats(Maker.hasty_touch.__name__, 9)
+    BYREGOTS_BLESSING = ActionStats(Maker.byregots_blessing.__name__, 50)
+    PRECISE_TOUCH = ActionStats(Maker.prudent_touch.__name__, 53)
+    FOCUSED_TOUCH = ActionStats(Maker.focused_touch.__name__, 68)
+    PATIENT_TOUCH = ActionStats(Maker.patient_touch.__name__, 64)
+    PRUDENT_TOUCH = ActionStats(Maker.prudent_touch.__name__, 66)
+    TRAINED_EYE = ActionStats(Maker.trained_eye.__name__, 80)
+    PREPARATORY_TOUCH = ActionStats(Maker.preparatory_touch.__name__, 71)
+    REFLECT = ActionStats(Maker.reflect.__name__, 69)
 
     # buff
-    INNER_QUIET = Maker.inner_quiet.__name__
-    WASTE_NOT = Maker.waste_not.__name__
-    WASTE_NOT_II = Maker.waste_not_ii.__name__
-    GREAT_STRIDES = Maker.great_strides.__name__
-    INNOVATION = Maker.innovation.__name__
-    VENERATION = Maker.veneration.__name__
-    NAME_OF_THE_ELEMENTS = Maker.name_of_the_elements.__name__
-    FINAL_APPRAISAL = Maker.final_appraisal.__name__
+    INNER_QUIET = ActionStats(Maker.inner_quiet.__name__, 11)
+    WASTE_NOT = ActionStats(Maker.waste_not.__name__, 15)
+    WASTE_NOT_II = ActionStats(Maker.waste_not_ii.__name__, 47)
+    GREAT_STRIDES = ActionStats(Maker.great_strides.__name__, 21)
+    INNOVATION = ActionStats(Maker.innovation.__name__, 26)
+    VENERATION = ActionStats(Maker.veneration.__name__, 15)
+    NAME_OF_THE_ELEMENTS = ActionStats(Maker.name_of_the_elements.__name__, 37)
+    FINAL_APPRAISAL = ActionStats(Maker.final_appraisal.__name__, 42)
 
     # repair
-    MASTERS_MEND = Maker.masters_mend.__name__
-    MANIPULATION = Maker.manipulation.__name__
+    MASTERS_MEND = ActionStats(Maker.masters_mend.__name__, 7)
+    MANIPULATION = ActionStats(Maker.manipulation.__name__, 65)
 
     # other
-    OBSERVE = Maker.observe.__name__
-    CAREFUL_OBSERVATION = Maker.careful_synthesis.__name__
-    DELICATE_SYNTHESIS = Maker.delicate_synthesis.__name__
-    TRICKS_OF_THE_TRADE = Maker.tricks_of_the_trade.__name__
+    OBSERVE = ActionStats(Maker.observe.__name__, 13)
+    CAREFUL_OBSERVATION = ActionStats(Maker.careful_synthesis.__name__, 55)
+    DELICATE_SYNTHESIS = ActionStats(Maker.delicate_synthesis.__name__, 76)
+    TRICKS_OF_THE_TRADE = ActionStats(Maker.tricks_of_the_trade.__name__, 13)

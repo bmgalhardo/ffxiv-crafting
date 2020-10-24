@@ -6,7 +6,8 @@ if __name__ == '__main__':
     r = Recipe(name='Crimson Cider')
     r.update_fromdb()
 
-    m = Maker(recipe=r, player=Player(80, 1500, 1350, 300))
+    p = Player(80, 1500, 1350, 300)
+    m = Maker(recipe=r, player=p)
     print(m.step, m.durability, m.progress, m.quality, m.player.cp)
 
     action_rotation = [
@@ -22,6 +23,8 @@ if __name__ == '__main__':
         # Actions.VENERATION,
         # Actions.GROUNDWORK
     ]
+    print(p.available_actions())
+    p.check_rotation(action_rotation)
 
     for action in action_rotation:
-        getattr(m, action.value)()
+        getattr(m, action.value.function)()

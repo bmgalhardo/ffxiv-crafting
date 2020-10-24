@@ -23,6 +23,20 @@ class Player(Stats):
         super().__init__(craftsmanship, control, cp)
         self.level = level
 
+    def available_actions(self):
+        from maker import Actions
+
+        action_available = []
+        for action in Actions:
+            if action.value.min_level < self.level:
+                action_available.append(action.name)
+        return action_available
+
+    def check_rotation(self, rotation: list):
+        for action in rotation:
+            if action.value.min_level > self.level:
+                raise Exception(f'{action.name} not available at lvl {self.level}')
+
 
 class Recipe:
 
